@@ -1,0 +1,25 @@
+{
+  "name": "hands-on-postgis",
+  "version": "1.0.0",
+  "description": "Hands on PostGIS example project",
+  "main": "./lib/index.js",
+  "scripts": {
+    "start": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "build": "tsc -p .",
+    "debug": "node --nolazy --inspect-brk=9229 src/index.ts"
+  },
+  "author": "Aritra Das",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "pg": "^8.2.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^7.14.3",
+    "@types/node": "^14.0.13",
+    "eslint": "^7.2.0",
+    "nodemon": "^2.0.4",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.5"
+  }
+}
