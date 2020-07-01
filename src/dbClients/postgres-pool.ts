@@ -1,7 +1,7 @@
 import { environment } from './../environment';
 import * as pg from 'pg';
 
-export async function getPostgesPool() {
+export async function getPostgresPool() {
     const pool = new pg.Pool({
         user: environment.postGisDBCreds.user,
         host: environment.postGisDBCreds.host,
