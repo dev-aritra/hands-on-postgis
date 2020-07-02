@@ -13,6 +13,7 @@ async function main() {
     await insertKFCBoundaries(postgresPool);
     await insertNYBoundary(postgresPool);
     await expandBoundariesBy205Mtrs(postgresPool);
+    await expandBoundariesBy300Mtrs(postgresPool);
     logGreen('Execution complete');
 }
 
@@ -41,6 +42,16 @@ async function expandBoundariesBy205Mtrs(pgPool: pg.Pool) {
 
     const expansionQuery = buildExpansionQuery(205);
     const expandedBoundaryInsertionQuery = 'insert into ' + level1Boundaries + ' (geom) ' + expansionQuery;
+    await pgPool.query(expandedBoundaryInsertionQuery);
+}
+
+async function expandBoundariesBy300Mtrs(pgPool: pg.Pool) {
+    const level2Boundaries = 'level2_boundaries';
+    const tableCreationQuery = buildTaleCreationQuery(level2Boundaries, pgPool);
+    await pgPool.query(tableCreationQuery);
+
+    const expansionQuery = buildExpansionQuery(300);
+    const expandedBoundaryInsertionQuery = 'insert into ' + level2Boundaries + ' (geom) ' + expansionQuery;
     await pgPool.query(expandedBoundaryInsertionQuery);
 }
 
