@@ -10,8 +10,9 @@ main();
 
 async function main() {
     const postgresPool = await getPostgresPool();
-    await insertNYBoundary(postgresPool);
     await insertKFCBoundaries(postgresPool);
+    await insertNYBoundary(postgresPool);
+    await expandBoundariesBy205Mtrs(postgresPool);
     logGreen('Execution complete');
 }
 
@@ -31,6 +32,20 @@ async function insertKFCBoundaries(pgPool: pg.Pool) {
 
     const insertQueries = kfcs.features.map(kfc => buildInsertionQuery(JSON.stringify(kfc.geometry), kfcBoundariesTable));
     insertQueries.forEach(async insertQuery => await pgPool.query(insertQuery));
+}
+
+async function expandBoundariesBy205Mtrs(pgPool: pg.Pool) {
+    const level1Boundaries = 'level1_boundaries';
+    const tableCreationQuery = buildTaleCreationQuery(level1Boundaries, pgPool);
+    await pgPool.query(tableCreationQuery);
+
+    const expansionQuery = buildExpansionQuery(205);
+    const expandedBoundaryInsertionQuery = 'insert into ' + level1Boundaries + ' (geom) ' + expansionQuery;
+    await pgPool.query(expandedBoundaryInsertionQuery);
+}
+
+function buildExpansionQuery(distanceInMeters: number) {
+    return 'select st_union(array (select st_buffer(geom::geography, ' + distanceInMeters + ' )::geometry from kfc_boundaries))'
 }
 
 function buildTaleCreationQuery(tableName: String, pgPool: pg.Pool) {
