@@ -14,6 +14,7 @@ async function main() {
     await insertNYBoundary(postgresPool);
     await expandBoundariesBy205Mtrs(postgresPool);
     await expandBoundariesBy300Mtrs(postgresPool);
+    await subtractLevel1FromLevel2(postgresPool);
     logGreen('Execution complete');
 }
 
@@ -53,6 +54,17 @@ async function expandBoundariesBy300Mtrs(pgPool: pg.Pool) {
     const expansionQuery = buildExpansionQuery(300);
     const expandedBoundaryInsertionQuery = 'insert into ' + level2Boundaries + ' (geom) ' + expansionQuery;
     await pgPool.query(expandedBoundaryInsertionQuery);
+}
+
+async function subtractLevel1FromLevel2(pgPool: pg.Pool) {
+    const boundaryDifference = 'boundary_difference';
+    const tableCreationQuery = buildTaleCreationQuery(boundaryDifference, pgPool);
+    await pgPool.query(tableCreationQuery);
+    
+    const level1 = (await pgPool.query('select geom from level1_boundaries')).rows[0].geom;
+    const level2 = (await pgPool.query('select geom from level2_boundaries')).rows[0].geom;
+    const query = "insert into "+ boundaryDifference + " (geom) select ST_Difference(\'"+ level2 +"\',\'" + level1 +"\');";
+    await pgPool.query(query);
 }
 
 function buildExpansionQuery(distanceInMeters: number) {
