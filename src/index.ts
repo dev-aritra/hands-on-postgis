@@ -5,6 +5,7 @@ import * as newYork from './input/ny.json';
 import * as kfcs from './input/kfcs.json';
 import { getPostgresPool } from './dbClients/postgres-pool';
 import { logGreen } from './logger';
+import { writeFile } from './file-writer';
 
 main();
 
@@ -15,6 +16,7 @@ async function main() {
     await expandBoundariesBy205Mtrs(postgresPool);
     await expandBoundariesBy300Mtrs(postgresPool);
     await subtractLevel1FromLevel2(postgresPool);
+    await findIntersection(postgresPool);
     logGreen('Execution complete');
 }
 
@@ -60,11 +62,20 @@ async function subtractLevel1FromLevel2(pgPool: pg.Pool) {
     const boundaryDifference = 'boundary_difference';
     const tableCreationQuery = buildTaleCreationQuery(boundaryDifference, pgPool);
     await pgPool.query(tableCreationQuery);
-    
+
     const level1 = (await pgPool.query('select geom from level1_boundaries')).rows[0].geom;
     const level2 = (await pgPool.query('select geom from level2_boundaries')).rows[0].geom;
-    const query = "insert into "+ boundaryDifference + " (geom) select ST_Difference(\'"+ level2 +"\',\'" + level1 +"\');";
+    const query = "insert into " + boundaryDifference + " (geom) select ST_Difference(\'" + level2 + "\',\'" + level1 + "\');";
     await pgPool.query(query);
+}
+
+async function findIntersection(pgPool: pg.Pool) {
+    const ny = (await pgPool.query('select geom from ny_boundary')).rows[0].geom;
+    const difference = (await pgPool.query('select geom from boundary_difference')).rows[0].geom;
+    const query = "select st_asgeojson(ST_Intersection(\'" + difference + "\',\'" + ny + "\'));";
+    const newLocal = await pgPool.query(query);
+    logGreen(JSON.stringify(newLocal.rows[0].st_asgeojson));
+    writeFile('green_zones', JSON.stringify(newLocal.rows[0].st_asgeojson));
 }
 
 function buildExpansionQuery(distanceInMeters: number) {
