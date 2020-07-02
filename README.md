@@ -1,5 +1,5 @@
 # Hands-on PostGIS 
-A `node.js` application, which demonstrates cabailities of PostGIS
+A node.js application, which demonstrates the capabilities of PostGIS
 
 ## Read the compleget guide here
 https://medium.com/inspiredbrilliance/<placeholder>
